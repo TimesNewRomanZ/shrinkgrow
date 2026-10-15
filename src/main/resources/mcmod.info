@@ -1,0 +1,17 @@
+[
+{
+  "modid": "${modId}",
+  "name": "${modName}",
+  "description": "Shrink or grow your player. Built for a private GTNH 1.7.10 server: no abilities, no items, just size.",
+  "version": "${modVersion}",
+  "mcversion": "${minecraftVersion}",
+  "authorList": ["Will Keegan"],
+  "credits": "Concept from Shrink. by Gigabit101 (LGPLv3). 1.7.10 implementation is original.",
+  "logoFile": "",
+  "url": "",
+  "updateUrl": "",
+  "parent": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

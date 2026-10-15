@@ -1,0 +1,5 @@
+key.categories.shrinkgrow=Shrink & Grow
+key.shrinkgrow.shrink=Shrink
+key.shrinkgrow.grow=Grow
+key.shrinkgrow.reset=Reset size
+item.shrinkgrow.size_remote.name=Size Remote
