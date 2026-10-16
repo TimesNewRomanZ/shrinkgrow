@@ -85,25 +85,33 @@ client keeps 1.62. Writing a formula "in terms of yOffset" therefore produces a
 *different answer on each side* - this was the cause of a real bug (see below).
 Size itself is safe because width/height/box are side-symmetric.
 
-**Eye height is `getDefaultEyeHeight() * scale`, and nothing else.**
-Vanilla itself compensates for the yOffset split - see
-`Item.getMovingObjectPositionFromPlayer`, which uses
-`posY + (getEyeHeight() - getDefaultEyeHeight())` on the client but
-`posY + getEyeHeight()` on the server. A yOffset-based eye height makes those
-two corrections compound instead of cancel.
+**Eye height is side-dependent and must be measured, not assumed.**
+Values measured in GTNH 2.9 RC1 with `/scaleclient` and `/scale info`:
 
-An earlier version used `(yOffset + defaultEyeHeight) * scale - yOffset`, right
-on the server and wrong on the client by `1.62 * (scale - 1)` - about 1.2 blocks
-at quarter size, often putting the interaction ray underground. It went unnoticed
-for weeks because vanilla block targeting still worked: `getMouseOver()` runs
-inside the render tick, where `CameraHandler` has already parked `eyeHeight` at
-its default. Only mods that ray-trace outside that window (Matter Manipulator
-region select, EnderIO conduit and AE2 cover right-clicks) misbehaved, and only
-while shrunk, since the error is zero at scale 1.
+| | client | server |
+| --- | --- | --- |
+| `yOffset` | 1.62 | 0 (EntityPlayerMP zeroes it) |
+| `getDefaultEyeHeight()` | **0.12** | **1.62** |
+| `posY` sits at | feet + 1.62 | the feet |
+| vanilla ray origin | `posY + (eyeHeight - g)` | `posY + eyeHeight` |
 
-Scaling the default satisfies both sides at once. Vanilla also probes suffocation
-at `posY + getEyeHeight()`; that stays correct on the server, which is the side
-that applies the damage.
+Both the constants *and* the formula differ per side, so eye height is solved
+separately for each, targeting the geometry directly:
+
+    target = 1.62 * scale                        // eye height above the feet
+    client: eyeHeight = target - yOffset + g
+    server: eyeHeight = target - yOffset
+
+At scale 1 each branch returns that side's own stock value (0.12 and 1.62),
+so normal size is provably untouched - which is the property to check first if
+this ever needs changing again.
+
+Two earlier attempts failed here, both by assuming instead of measuring.
+`(yOffset + g) * scale - yOffset` was right only on the server. Replacing it
+with `g * scale` fixed the server-correct case and left the client ray at very
+nearly full height, because the client's `g` is 0.12 rather than the 1.62 that
+had been measured on the server - so shrinking barely moved it, and the ray
+targeted blocks roughly a block above the crosshair.
 
 **Camera.** `EntityRenderer.orientCamera` computes the camera from `posY` and a
 hardcoded `1.62F` and ignores `eyeHeight` entirely, so writing `eyeHeight` does
@@ -127,6 +135,17 @@ computes vanilla's translate itself and pre-compensates.
   on the ground) and by walking through a 1-block tunnel without suffocating.
   Fixing it properly means a Mixin on `orientCamera` to confine the shift;
   GTNH ships UniMixins, so it is available if it ever becomes worth doing.
+- **Matter Manipulator region select is wrong while scaled, and the bug is in
+  MM, not here.** `MMUtils.getLookingAtLocation` does
+  `getPosition()` (`posY + (eyeHeight - g)`) and then, server-side only, adds
+  `getEyeHeight()` on top. Those cancel only when `eyeHeight == g`, i.e. only
+  for an unscaled player. With scale 0.5 the server's ray starts at the feet,
+  0.81 too low. The upstream fix is one token - add `getDefaultEyeHeight()`
+  rather than `getEyeHeight()`, which is identical for every normal player.
+  It cannot be fixed from this mod: MM's server path would need
+  `eyeHeight = 1.215` where the vanilla path needs `0.81`, and one field cannot
+  be both. Options are an upstream report or a local Mixin `@Redirect` on that
+  single call site.
 - Nameplates above a scaled player render scaled too.
 - Shadows stay normal size regardless of scale.
 

@@ -75,7 +75,19 @@ public final class SizeApplier {
      * is off by yOffset, but it only drives prediction.
      */
     public static float eyeHeightField(EntityPlayer player, float scale) {
-        return player.getDefaultEyeHeight() * scale;
+        // Where the eye must end up, measured from the feet.
+        float target = VANILLA_CAMERA_HEIGHT * scale;
+
+        if (player.worldObj.isRemote) {
+            // Client: vanilla adds (eyeHeight - defaultEyeHeight) to posY,
+            // and posY sits yOffset above the feet.
+            // feet + yOffset + (e - g) == feet + target
+            return target - player.yOffset + player.getDefaultEyeHeight();
+        }
+
+        // Server: vanilla adds eyeHeight to posY, and EntityPlayerMP zeroes yOffset.
+        // feet + yOffset + e == feet + target
+        return target - player.yOffset;
     }
 
     /**

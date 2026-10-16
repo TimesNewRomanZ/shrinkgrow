@@ -17,6 +17,7 @@ public class Config {
 
     /** Fine tuning knob for the first-person camera; see SizeApplier. */
     public static float cameraFudge = 0.0F;
+    public static boolean enableCameraShift = true;
 
     public static void load(File file) {
         Configuration cfg = new Configuration(file);
@@ -50,6 +51,14 @@ public class Config {
             "gameplay",
             true,
             "Require permission level 2 to run /scale on another player.");
+
+        enableCameraShift = cfg.getBoolean(
+            "enableCameraShift",
+            "client",
+            true,
+            "Lower the first-person camera to match your size. Turn OFF to diagnose aiming problems: "
+                + "with it off the camera stays at full height while small, which looks wrong but proves "
+                + "whether the camera shift is what is throwing the interaction ray off.");
 
         cameraFudge = cfg.getFloat(
             "cameraFudge",

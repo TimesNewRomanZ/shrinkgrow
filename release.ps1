@@ -48,7 +48,7 @@ $ErrorActionPreference = 'Stop'
 # Edit these if your instance paths change.
 # ---------------------------------------------------------------------------
 $InstanceModFolders = @(
-    "C:\Users\Will Keegan\AppData\Roaming\PrismLauncher\instances\GTNH 2.9 Beta 3\.minecraft\mods"
+    "C:\Users\Will Keegan\AppData\Roaming\PrismLauncher\instances\Greg 2.9 RC1\.minecraft\mods"
 )
 # ---------------------------------------------------------------------------
 

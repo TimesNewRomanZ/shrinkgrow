@@ -44,6 +44,10 @@ public class CameraHandler {
             if (shifted) return;
 
             float scale = ScaleManager.getScale(player);
+            if (!Config.enableCameraShift) {
+                posYShift = 0.0F;
+                return;
+            }
             if (scale == 1.0F) {
                 posYShift = 0.0F;
                 return;
